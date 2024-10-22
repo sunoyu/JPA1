@@ -9,14 +9,28 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
 public class MemberApiController {
     private final MemberService service;
 
+    @GetMapping("/api/v2/members")
+    public Result memberV2() {  // 추가적으로 요구사항이 들어온다면? 어레이만 반환하면 추가 요구사항을 반영하기 어려움.
+        List<Member> findMembers = service.findMembers();
+        List<MemverDto> collect = findMembers.stream().
+                map(m -> new MemverDto(m.getName())).collect(Collectors.toList());
+
+        return new Result(collect.size(), collect);
+
+    }
+
+
     @PostMapping("/api/v2/members")
     public CreateMemberResponse saveMemberV2(@RequestBody @Valid CreateMemberRequest req) {
+
         Member member = new Member();
         member.setName(req.getName());
 
@@ -59,6 +73,19 @@ public class MemberApiController {
 
     @Data
     static class UpdateMemberRequest {
+        private String name;
+    }
+
+    @Data
+    @AllArgsConstructor
+    private class Result<T> {
+        private int count; // 이런식으로 추가로 넣어줄 수 있음.
+        private T data;
+    }
+
+    @Data
+    @AllArgsConstructor
+    private class MemverDto {
         private String name;
     }
 }
